@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
-import Order from '../models/orderModel.js';
-import Customer from "../models/customerModel.js";
+import Order from './../models/orderModel.js';
+import Customer from "./../models/customerModel.js";
 
  const fetchOrders = async (req, res, next) => {
     const limit = parseInt(req.query.limit);
@@ -10,7 +10,9 @@ import Customer from "../models/customerModel.js";
             const error = new Error("Invalid limit value");
                 error.status = 400;
                 next(error);
+                return
         }
+        
 
         const orders = await Order.find().limit(limit);
         console.log(orders);
@@ -28,6 +30,7 @@ import Customer from "../models/customerModel.js";
             const error = new Error("Invalid ID format")
             error.status = 400;
             next(error);
+            return;
         }
 
         const orderId = new ObjectId(req.params.id); 
@@ -38,6 +41,7 @@ import Customer from "../models/customerModel.js";
             const error = new Error("Order not found");
             error.status = 400;
             next(error);
+            return;
         }
 
         ordersData._id = ordersData._id.toString();
@@ -56,9 +60,9 @@ const newOrder = async (req, res, next) => {
         const customerId = new ObjectId(req.body['customerId']); 
         const customerData = await Customer.findOne({ _id: customerId });
         if (customerData && (!customerData.hasOwnProperty("dateOfFirstOrder") || customerData.dateOfFirstOrder)) {
-            const result = await collection.updateOne(
+            const result = await Customer.updateOne(
                 { _id: customerId }, 
-                { $set: { dateOfFirstOrder: Date.now } }
+                { $set: { dateOfFirstOrder: Date.now() } }
             );
         }
 
@@ -79,31 +83,42 @@ const validateOrder = (req, res, next) => {
         const error = new Error("Missing required fields: customerId, order, totalCost");
         error.status = 404;
         next(error);
+        return;
     }
 
     next();
 }
 
-const updateStatus = async (req, res, next) => {
+const updateOrder = async (req, res, next) => {
     
     try{
-        const { orderId, status} = req.body;
+        if (!ObjectId.isValid(req.params.id)) {
+            const error = new Error("Invalid ID format")
+            error.status = 400;
+            next(error);
+            return;
+        }
 
-        if(!orderId || !status) {
-            const error = new Error("Missing required fields: orderId or status");
+        const orderId = new ObjectId(req.params.id); 
+        const {parameter, value} = req.body;
+
+        
+
+        if(!orderId || !parameter || !value) {
+            const error = new Error("Missing required fields: orderId, parameter, value");
             error.status = 404;
             next(error);
+            return;
         }
         
-        orderId = new ObjectId(orderId); 
-        
+            
         const orderData = await Order.findOne({ _id: orderId });
         if (orderData) {
-            const result = await collection.updateOne(
+            const result = await Order.updateOne(
                 { _id: orderId }, 
-                { $set: { status: status } }
+                { $set: { [parameter]: value } }
             );
-            res.status(200).send("success");
+            res.status(200).json({"message":"updated"});
         }
         else{
             const error = new Error("Incorrect orderId.");
@@ -115,9 +130,8 @@ const updateStatus = async (req, res, next) => {
         const error = new Error("Error updating order status: " + err.message);
         error.status = 500;
         next(error); 
-    }
-    
+    }    
     
 }
 
-export default {fetchOrders, fetchOrder, newOrder, validateOrder};
+export default {fetchOrders, fetchOrder, newOrder, validateOrder, updateOrder};

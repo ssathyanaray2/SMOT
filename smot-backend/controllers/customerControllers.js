@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import Customer from '../models/customerModel.js';
+import Customer from './../models/customerModel.js';
 
  const fetchCustomers = async (req, res, next) => {
     const limit = parseInt(req.query.limit);
@@ -9,6 +9,7 @@ import Customer from '../models/customerModel.js';
             const error = new Error("Invalid limit value");
                 error.status = 400;
                 next(error);
+                return
         }
 
         const customer = await Customer.find().limit(limit);
@@ -26,6 +27,7 @@ import Customer from '../models/customerModel.js';
             const error = new Error("Invalid ID format")
             error.status = 400;
             next(error);
+            return
         }
 
         const customerId = new ObjectId(req.params.id); 
@@ -36,6 +38,7 @@ import Customer from '../models/customerModel.js';
             const error = new Error("Customer not found");
             error.status = 400;
             next(error);
+            return
         }
 
         customerData._id = customerData._id.toString();
@@ -58,6 +61,7 @@ const newCustomer = async (req, res, next) => {
         const error = new Error("Error inserting customer: " + err.message);
         error.status = 500;
         next(error); 
+        return
     }
 };
 

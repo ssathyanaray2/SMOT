@@ -6,7 +6,8 @@ router
 .get('/', orderControllers.fetchOrders)
 .post('/', orderControllers.validateOrder, orderControllers.newOrder);
 
-router.get('/:id', orderControllers.fetchOrder);
-
+router
+.get('/:id', orderControllers.fetchOrder)
+.post('/:id', orderControllers.updateOrder);
 
 export default router;
