@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 
 const customerSchema = new mongoose.Schema({
-	Name: { type: String, required: true },
-	Address: { type: String, required: true },
+	name: { type: String, required: true },
+	address: { type: String, required: true },
 	phoneNumber: { type: String, required: true },
-	Email: { type: String },
+	email: { type: String },
 	dateOfFirstOrder: { type: Date }, //update it when order is recieved.
 	totalPurchased: { type: Number },
-	Comments: { type: String},
+	comments: { type: String},
 
 });
 
