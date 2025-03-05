@@ -2,7 +2,6 @@
 import './App.css';
 import Appbar from './components/Appbar.jsx';
 import Tabs from './components/Tabs.jsx';
-import Customer from './components/Customer.jsx';
 // import Footer from './components/Footer.jsx';
 import { Box } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -30,8 +29,8 @@ function App() {
         {/* Routes and Route Configuration */}
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/order" element={<Tabs />} />
-          <Route path="/customer" element={<Customer />} />
+          <Route path="/order" element={<Tabs tabValue="order"/>} />
+          <Route path="/customer" element={<Tabs tabValue="customer"/>} />
         </Routes>
         {/* You can add footer if needed */}
         {/* <Footer /> */}

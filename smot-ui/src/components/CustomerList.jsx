@@ -1,8 +1,11 @@
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
+import PropTypes from 'prop-types';
 
-export default function Customer() {
 
+export default function CustomerList(props) {
+
+    const { value, index } = props;
 
     const columns = [
       { field: 'id', headerName: 'ID', width: 90 },
@@ -76,14 +79,14 @@ export default function Customer() {
       { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
       { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
       { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-      { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-      { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
-    ];
+      { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 }
+      ];
 
   return (
     <div
       role="tabpanel"
     > 
+    {value === index && 
         <Box sx={{ width: '100%' }}>
           <DataGrid
             rows={rows}
@@ -95,7 +98,13 @@ export default function Customer() {
             pageSizeOptions={[5, 10, 25, { value: -1, label: 'All' }]}
           />
       </Box>
+    }
     </div>
   );
 
 }
+
+CustomerList.propTypes = {
+    index: PropTypes.number.isRequired,
+    value: PropTypes.number.isRequired,
+  };
