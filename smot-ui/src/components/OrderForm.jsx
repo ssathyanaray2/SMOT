@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Grid,
@@ -9,10 +9,12 @@ import {
   Typography,
   Button,
   IconButton,
-  Divider,
+  Divider
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { useNavigate } from "react-router-dom";
+
 // import { Canvas } from "@react-three/fiber";
 // import { OrbitControls, useGLTF } from "@react-three/drei";
 // import oilBottle from "./oil_bottle.glb";
@@ -25,8 +27,64 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 
 export default function OrderForm(props) {
   const { value, index } = props;
-  const options = ["Olive Oil", "Coconut Oil", "Sunflower Oil", "Canola Oil"];
+  const [options, setOptions] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [address, setAddress] = useState([]);
+  const [orderDetails, setOrderDetails] = useState({
+    
+  });
   const [oilSelections, setOilSelections] = useState([{ id: Date.now(), type: "", quantity: "" }]);
+  const navigate = useNavigate();
+
+  useEffect( () => {
+    const fetchProductOptions = ( async () => {
+      
+      try{
+        const response = await fetch("http://localhost:8080/api/products");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const json = await response.json();
+        const op = json.map((product) => product.oilType);
+        setOptions(op);
+      }
+      catch(err) {
+        throw new Error(`HTTP error! status: ${err}`);
+      }
+    })
+    fetchProductOptions();
+  }, []);
+
+
+  useEffect( () => {
+    const fetchCustomers = ( async () => {
+      
+      try{
+        const response = await fetch("http://localhost:8080/api/customers?limit=6");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const json = await response.json();
+
+        const uniqueCustomers =  json.map((customer, index) => ({
+          label: customer.name,
+          key: index+1
+        }));
+        setCustomers(uniqueCustomers);
+
+        const customerAddresses = json.map((customer, index) => ({
+          label: customer.address,
+          key: index+1
+        }));
+        setAddress(customerAddresses);
+        
+      }
+      catch(err) {
+        throw new Error(`HTTP error! status: ${err}`);
+      }
+    })
+    fetchCustomers();
+  }, []);
 
   const addOil = () => {
     setOilSelections([...oilSelections, { id: Date.now(), type: "", quantity: "" }]);
@@ -35,6 +93,22 @@ export default function OrderForm(props) {
   const removeOil = (id) => {
     setOilSelections(oilSelections.filter((oil) => oil.id !== id));
   };
+
+  // const createNewOrder = async (orderDetails) => {
+  //   try {
+  //     const response = await fetch(`http://localhost:8080/api/orders/`, {
+  //       method: "POST",
+  //       body: {orderDetails}
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error("Failed to delete order");
+  //     }
+  //   }
+  //   catch(err){
+  //     throw new Error(`error while creating a new order + ${err}`);
+  //   }
+  // };
 
   return (
     <div
@@ -63,7 +137,6 @@ export default function OrderForm(props) {
             </Typography>
             <Divider sx={{ mb: 2 }} />
 
-            {/* Customer Selection */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                 Customer
@@ -71,14 +144,14 @@ export default function OrderForm(props) {
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={8}>
                   <Autocomplete
-                    options={options}
+                    options={customers}
                     sx={{ width: "100%" }}
                     renderInput={(params) => <TextField {...params} label="Select Customer" />}
                   />
                 </Grid>
                 <Grid item>
-                  <Button variant="outlined" fullWidth sx={{ height: "100%" }}>
-                    + New Customer
+                  <Button variant="outlined" fullWidth sx={{ height: "100%" }} onClick={() => navigate("/customer")} >
+                      + New Customer
                   </Button>
                 </Grid>
               </Grid>
@@ -126,7 +199,7 @@ export default function OrderForm(props) {
               Use Customer Address
             </Button>
             <TextField label="Total Cost" fullWidth sx={{ mb: 3 }} />
-            <Button variant="contained" color="primary" fullWidth>
+            <Button variant="contained" color="primary" fullWidth > 
               Submit Order
             </Button>
           </Paper>

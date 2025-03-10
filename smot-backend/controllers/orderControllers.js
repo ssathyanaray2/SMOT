@@ -15,7 +15,6 @@ import Customer from "./../models/customerModel.js";
         
 
         const orders = await Order.find().limit(limit);
-        console.log(orders);
         return res.status(200).json(orders);
     }
     catch(err){
@@ -102,8 +101,6 @@ const updateOrder = async (req, res, next) => {
         const orderId = new ObjectId(req.params.id); 
         const {parameter, value} = req.body;
 
-        
-
         if(!orderId || !parameter || !value) {
             const error = new Error("Missing required fields: orderId, parameter, value");
             error.status = 404;
@@ -111,7 +108,6 @@ const updateOrder = async (req, res, next) => {
             return;
         }
         
-            
         const orderData = await Order.findOne({ _id: orderId });
         if (orderData) {
             const result = await Order.updateOne(

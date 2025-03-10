@@ -1,86 +1,95 @@
 import Box from '@mui/material/Box';
 import { DataGrid } from '@mui/x-data-grid';
 import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
 
 
 export default function CustomerList(props) {
 
     const { value, index } = props;
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+
+    useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const response = await fetch('http://localhost:8080/api/customers?limit=6');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const json = await response.json();
+          const processed = json.map((row, index) => ({
+            ...row,
+            id: index + 1
+          }));
+
+          setData(processed);
+          setLoading(false);
+        } catch (e) {
+          setError(e);
+          setLoading(false);
+        }
+      };
+        fetchData();
+    }, []);
+
+    if (loading) {
+      return <p>Loading...</p>;
+    }
+  
+    if (error) {
+      return <p>Error: {error.message}</p>;
+    }
 
     const columns = [
-      { field: 'id', headerName: 'ID', width: 90 },
+      { field: 'id', headerName: 'ID', width: 65 },
       {
-        field: 'Date',
-        headerName: 'Date',
-        type: 'date',
-        width: 150,
-        editable: false,
-      },
-      {
-        field: 'firstName',
+        field: 'name',
         headerName: 'First name',
-        width: 150,
+        width: 125,
         editable: true,
       },
       {
-        field: 'Address',
+        field: 'address',
         headerName: 'Address',
-        width: 150,
+        width: 200,
         editable: true,
       },
       {
-        field: 'Order Details',
-        headerName: 'Order Details',
+        field: 'phoneNumber',
+        headerName: 'Phone',
         width: 150,
-        editable: true,
-      },
-      {
-        field: 'Quantity',
-        headerName: 'Quantity',
-        width: 150,
-        type: 'number',
         editable: false,
       },
       {
-        field: 'Cost',
-        headerName: 'Cost',
+        field: 'email',
+        headerName: 'Email',
+        width: 170,
+        editable: true,
+      },
+      {
+        field: 'dateOfFirstOrder',
+        headerName: 'Date',
         width: 150,
+        editable: false,
+      },
+      {
+        field: 'totalPurchased',
+        headerName: 'Total Pruchased',
+        width: 75,
         type: 'number',
         editable: true,
       },
       {
-        field: 'Discount',
-        headerName: 'Discount',
-        width: 150,
-        editable: true,
-      },
-      {
-        field: 'Status',
-        headerName: 'Status',
-        width: 150,
-        editable: true,
-      },
+        field: 'comments',
+        headerName: 'Comments',
+        width: 200,
+        editable: true
+      }
     ];
-    
-    const rows = [
-      { id: 1, firstName: 'Jon', age: 14 },
-      { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 31 },
-      { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 31 },
-      { id: 4, lastName: 'Stark', firstName: 'Arya', age: 11 },
-      { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-      { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-      { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-      { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-      { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
-      { id: 1, firstName: 'Jon', age: 14 },
-      { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 31 },
-      { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 31 },
-      { id: 4, lastName: 'Stark', firstName: 'Arya', age: 11 },
-      { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-      { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-      { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-      { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 }
-      ];
+  
 
   return (
     <div
@@ -89,7 +98,7 @@ export default function CustomerList(props) {
     {value === index && 
         <Box sx={{ width: '100%' }}>
           <DataGrid
-            rows={rows}
+            rows={data}
             columns={columns}
             disableRowSelectionOnClick
             initialState={{

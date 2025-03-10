@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import orders from './routes/orders.js';
 import customers from './routes/customers.js';
+import products from './routes/products.js';
 import logger from './middleware/logger.js';
 import errorhandler from './middleware/error.js';
 import cors from 'cors';
@@ -29,6 +30,7 @@ app.get('/', (_, res) => {
 
 app.use('/api/orders', orders);
 app.use('/api/customers', customers);
+app.use('/api/products', products);
 
 app.use(errorhandler);
 
