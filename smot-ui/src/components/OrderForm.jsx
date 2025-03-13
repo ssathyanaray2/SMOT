@@ -14,6 +14,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useNavigate } from "react-router-dom";
+import { Switch, FormControlLabel } from "@mui/material";
 
 // import { Canvas } from "@react-three/fiber";
 // import { OrbitControls, useGLTF } from "@react-three/drei";
@@ -28,12 +29,11 @@ import { useNavigate } from "react-router-dom";
 export default function OrderForm(props) {
   const { value, index } = props;
   const [options, setOptions] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [address, setAddress] = useState([]);
-  const [orderDetails, setOrderDetails] = useState({
-    
-  });
-  const [oilSelections, setOilSelections] = useState([{ id: Date.now(), type: "", quantity: "" }]);
+  const [customer, setCustomer] = useState([]);
+  const [customerDetails, setCustomerDetails] = useState([]);
+  const [orderDetails, setOrderDetails] = useState({});
+  const [isPaid, setIsPaid] = useState(false);
+  const [oilSelections, setOilSelections] = useState([{ type: "", quantity: "" }]);
   const navigate = useNavigate();
 
   useEffect( () => {
@@ -66,17 +66,7 @@ export default function OrderForm(props) {
         }
         const json = await response.json();
 
-        const uniqueCustomers =  json.map((customer, index) => ({
-          label: customer.name,
-          key: index+1
-        }));
-        setCustomers(uniqueCustomers);
-
-        const customerAddresses = json.map((customer, index) => ({
-          label: customer.address,
-          key: index+1
-        }));
-        setAddress(customerAddresses);
+        setCustomerDetails(json);
         
       }
       catch(err) {
@@ -94,21 +84,56 @@ export default function OrderForm(props) {
     setOilSelections(oilSelections.filter((oil) => oil.id !== id));
   };
 
-  // const createNewOrder = async (orderDetails) => {
-  //   try {
-  //     const response = await fetch(`http://localhost:8080/api/orders/`, {
-  //       method: "POST",
-  //       body: {orderDetails}
-  //     });
 
-  //     if (!response.ok) {
-  //       throw new Error("Failed to delete order");
-  //     }
-  //   }
-  //   catch(err){
-  //     throw new Error(`error while creating a new order + ${err}`);
-  //   }
-  // };
+  const handleOilTypeChange = (index, newValue) => {
+    const updatedSelections = [...oilSelections];
+    updatedSelections[index].type = newValue;
+    setOilSelections(updatedSelections);
+  };
+
+  const handleQuantityChange = (index, event) => {
+    const updatedSelections = [...oilSelections];
+    updatedSelections[index].quantity = event.target.value;
+    setOilSelections(updatedSelections);
+  };
+
+
+  const handleAddAddress = async (customerAddress) => {
+    if (!customer) {
+      console.error("No customer selected");
+      return;
+    }
+    const element = document.querySelector("#address");
+
+    if (element) {
+      element.value = customerAddress; 
+    } else {
+      console.error("Delivery Address input not found");
+    }
+
+  };
+
+  const createNewOrder = async () => {
+    try {
+      setOrderDetails((orderD) => ({
+        ... orderD,
+        order: oilSelections
+      }));
+
+      console.log(orderDetails);
+      const response = await fetch(`http://localhost:8080/api/orders/`, {
+        method: "POST",
+        body: {orderDetails}
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete order");
+      }
+    }
+    catch(err){
+      throw new Error(`error while creating a new order + ${err}`);
+    }
+  };
 
   return (
     <div
@@ -144,8 +169,19 @@ export default function OrderForm(props) {
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={8}>
                   <Autocomplete
-                    options={customers}
+                    options={customerDetails}
                     sx={{ width: "100%" }}
+                    getOptionLabel={(option) => option.name}
+                    getOptionKey={(option) => option._id}
+                    onChange={(event, selectedCustomer) => {
+                      setCustomer(selectedCustomer);
+                      setOrderDetails((order) => ({
+                        ...order,
+                        customerId: selectedCustomer._id,
+                        deliveryAdress: selectedCustomer.address,
+                      }));
+                      handleAddAddress(selectedCustomer.address);
+                    }}
                     renderInput={(params) => <TextField {...params} label="Select Customer" />}
                   />
                 </Grid>
@@ -167,11 +203,14 @@ export default function OrderForm(props) {
                     <Autocomplete
                       options={options}
                       sx={{ width: "100%" }}
+                      onChange={(event, newValue) => handleOilTypeChange(index, newValue)}
                       renderInput={(params) => <TextField {...params} label="Oil Type" />}
                     />
                   </Grid>
                   <Grid item xs={4}>
-                    <TextField label="Quantity" type="number" fullWidth />
+                    <TextField label="Quantity" type="number" fullWidth 
+                    onChange={(event) => handleQuantityChange(index, event)}
+                    />
                   </Grid>
                   <Grid item xs={2}>
                     {oilSelections.length > 1 && (
@@ -192,16 +231,63 @@ export default function OrderForm(props) {
                 Add Another Oil
               </Button>
             </Box>
+            
 
-            <TextField label="Comments" multiline rows={3} fullWidth sx={{ mb: 2 }} />
-            <TextField label="Delivery Address" multiline rows={3} fullWidth sx={{ mb: 2 }} />
-            <Button variant="text" fullWidth sx={{ mb: 2 }}>
-              Use Customer Address
-            </Button>
-            <TextField label="Total Cost" fullWidth sx={{ mb: 3 }} />
-            <Button variant="contained" color="primary" fullWidth > 
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  Comments
+              </Typography>
+              <TextField  multiline rows={3} fullWidth sx={{ mb: 2 }} onChange={(e) => {
+                setOrderDetails((order) => ({
+                  ...order,
+                  comments: e.target.value, 
+                }));
+              }}/>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  Delivery Address
+              </Typography>
+              <TextField id="address" multiline rows={3} fullWidth sx={{ mb: 2 }} onChange={(e) => {
+                setOrderDetails((order) => ({
+                  ...order,
+                  deliveryAdress: e.target.value, 
+                })
+              );
+              }}/>
+            </Box>
+            
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  Total Cost
+              </Typography>
+              <TextField label="Total Cost" fullWidth sx={{ mb: 3 }} />
+            </Box>
+
+            <Box sx={{ mb: 3, display: "flex", alignItems: "center" }}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Payment Status
+              </Typography>
+              <FormControlLabel
+                sx={{ ml: 2 }} 
+                control={<Switch checked={isPaid} onChange={(event) => {
+                  setIsPaid(event.target.checked);
+                  setOrderDetails((order) => ({
+                    ...order,
+                    status: isPaid ? "Pending" : "Completed"
+                  })
+                );
+
+                }} color="success" />}
+                label={isPaid ? "Completed" : "Pending"}
+              />
+            </Box>
+
+            <Button variant="contained" color="primary" fullWidth onClick={createNewOrder}> 
               Submit Order
             </Button>
+
           </Paper>
         )}
       </Grid>
